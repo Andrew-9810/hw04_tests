@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}
+{% if is_edit %}
+  Редактировать пост
+{% else %}
+  Новый пост 
+{% endif %}
+{% endblock %}
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-md-8 p-5">
+      <div class="card">
+        <div class="card-header">
+          {% if is_edit %}
+            Редактировать запись
+          {% else %}
+            Добавить запись 
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <p>
+            {% include 'includes/error_control.html' %}
+            <form method="post">
+              {% csrf_token %}
+              {% for field in form %}
+                {% include 'includes/form_input.html' %}
+              {% endfor %}
+              <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">
+                  {% if is_edit %}
+                    Сохранить
+                  {% else %}
+                    Добавить
+                  {% endif %}
+                </button>
+              </div>
+            </form>
+          </p>
+        </div> <!-- card body -->
+      </div> <!-- card -->
+    </div> <!-- col -->
+  </div> <!-- row -->
+{% endblock %}
