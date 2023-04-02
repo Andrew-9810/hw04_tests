@@ -134,6 +134,46 @@ class PostURLTests(TestCase):
         self.assertEqual(post_text_0, POST_TEXT)
         self.assertEqual(post_group_0, GROUP_TITLE)
 
+    # Проверка словаря контекста главной страницы (в нём передаётся форма)
+    def test_post_edit_page_show_correct_context(self):
+        """Шаблон create_post сформирован с правильным контекстом."""
+        response = self.autor_client.get(
+            reverse(f'{POST_EDIT_URL_NAME}', kwargs={'post_id': f'{self.POST_ID}'})
+        )
+        # Словарь ожидаемых типов полей формы:
+        # указываем, объектами какого класса должны быть поля формы
+        form_fields = {
+            'text': forms.fields.CharField,
+            'group': forms.fields.ChoiceField
+        }
+        # Проверяем, что типы полей формы в словаре context соответствуют ожиданиям
+        for value, expected in form_fields.items():
+            with self.subTest(value=value):
+                form_field = response.context.get('form').fields.get(value)
+                # Проверяет, что поле формы является экземпляром
+                # указанного класса
+                self.assertIsInstance(form_field, expected)
+
+    # Проверка словаря контекста главной страницы (в нём передаётся форма)
+    def test_create_show_correct_context(self):
+        """Шаблон create_post сформирован с правильным контекстом."""
+        response = self.authorized_client.get(
+            reverse(POST_CREAT_URL_NAME)
+        )
+        # Словарь ожидаемых типов полей формы:
+        # указываем, объектами какого класса должны быть поля формы
+        form_fields = {
+            'text': forms.fields.CharField,
+            'group': forms.fields.ChoiceField
+        }
+        # Проверяем, что типы полей формы в словаре context соответствуют ожиданиям
+        for value, expected in form_fields.items():
+            with self.subTest(value=value):
+                form_field = response.context.get('form').fields.get(value)
+                # Проверяет, что поле формы является экземпляром
+                # указанного класса
+                self.assertIsInstance(form_field, expected)
+
 class PaginatorViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
