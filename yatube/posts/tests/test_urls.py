@@ -68,7 +68,7 @@ class PostURLTests(TestCase):
         self.assertRedirects(response, f'/profile/{AUTHOR_USERNAME}/')
 
     def test_post_id_edit_user_url_exists_at_desired_location(self):
-        """Страница post_id_edit перенаправила неавторизованного пользователя."""
+        """Страница post_id_edit перенаправила неавтозован-ого пользователя."""
         response = self.guest_client.get(f'/posts/{self.POST_ID}/edit/')
         self.assertRedirects(
             response, f'/auth/login/?next=/posts/{self.POST_ID}/edit/'
@@ -99,7 +99,7 @@ class PostURLTests(TestCase):
             f'/profile/{USER_USERNAME}/': PROFILE_TEMPLATE,
             f'/posts/{self.POST_ID}/': POST_DETAL_TEMPLATE,
             f'/posts/{self.POST_ID}/edit/': CREATE_TEMPLATE,
-            f'/create/': CREATE_TEMPLATE,
+            '/create/': CREATE_TEMPLATE,
         }
         for address, template in templates_url_name.items():
             with self.subTest(address=address):

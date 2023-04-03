@@ -230,10 +230,10 @@ class PaginatorViewsTest(TestCase):
         response = self.client.get(
             reverse(
                 f'{GROUP_LIST_URL_NAME}',
-                kwargs={'slug': f'{GROUP_SLUG}'}) + '?page=2'
+                kwargs={'slug': f'{GROUP_SLUG}'}) + '?page=2',
             )
         self.assertEqual(
-            len(response.context['page_obj']), self.SHOW_QUANTITY_SECOND_PAGE
+            len(response.context['page_obj']), self.SHOW_QUANTITY_SECOND_PAGE,
         )
 
     def test_profile_first_page_contains_ten_records(self):

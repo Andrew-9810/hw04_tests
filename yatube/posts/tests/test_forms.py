@@ -34,7 +34,6 @@ class PostCreateFormTests(TestCase):
         self.authorized_client.force_login(self.user)
         self.GROUP_ID = self.group.pk
 
-
     def test_create_post(self):
         """Валидная форма создает запись в Post."""
         post_count = Post.objects.count()
@@ -64,7 +63,6 @@ class PostCreateFormTests(TestCase):
         self.author = self.post.author
         id = self.post.id
         self.authorized_client.post(reverse('posts:post_edit', args=[id]),
-            data=form_data,
-            follow=True
-        )
+                                            data=form_data,
+                                            follow=True)
         self.assertNotEqual(self.post.text, 'Новый текст')
