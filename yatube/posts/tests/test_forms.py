@@ -54,6 +54,7 @@ class PostCreateFormTests(TestCase):
         """Валидная форма создает запись в Post."""
         # Подсчитаем количество записей в Post
         post_count = Post.objects.count()
+        print(post_count)
 
         form_data = {
             'text': POST_TEXT,
@@ -76,3 +77,17 @@ class PostCreateFormTests(TestCase):
                 group=self.GROUP_ID,
             ).exists()
         )
+
+    def test_edit_post(self):
+        """Валидная форма изменяет запись в базе данных"""
+        form_data = {
+            'text': 'Новый текст'
+        }
+        self.author = self.post.author
+        id = self.post.id
+        print(id)
+        self.authorized_client.post(reverse('posts:post_edit', args=[id]),
+            data=form_data,
+            follow=True
+        )
+        self.assertNotEqual(self.post.text, 'Новый текст')
