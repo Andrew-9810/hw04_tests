@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from ..models import Post, Group
-from django.urls import reverse
 from .constants import (
     INDEX_TEMPLATE,
     GROUP_LIST_TEMPLATE,
@@ -23,7 +22,6 @@ class PostURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        # Создадим запись в БД для проверки доступности адреса
         cls.author = User.objects.create_user(username=AUTHOR_USERNAME)
         cls.group = Group.objects.create(
             title=GROUP_TITLE,
@@ -36,13 +34,10 @@ class PostURLTests(TestCase):
         )
 
     def setUp(self):
-        # Создаем неавторизованный клиент
         self.guest_client = Client()
-        # Создаем авторизованный клиент
         self.user = User.objects.create_user(username=USER_USERNAME)
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
-        # Создаем клиент автора
         self.autor_client = Client()
         self.autor_client.force_login(self.author)
         self.POST_ID = self.post.pk
@@ -62,8 +57,6 @@ class PostURLTests(TestCase):
         response = self.guest_client.get(f'/posts/{self.POST_ID}/')
         self.assertEqual(response.status_code, 200)
 
-    # Проверка url post_id_edit авторизованным,
-    # неавторизованным пользователем и автором.
     def test_post_id_edit_author_url_exists_at_desired_location(self):
         """Страница post_id_edit доступна автору."""
         response = self.autor_client.get(f'/posts/{self.POST_ID}/edit/')
@@ -81,8 +74,6 @@ class PostURLTests(TestCase):
             response, f'/auth/login/?next=/posts/{self.POST_ID}/edit/'
         )
 
-    # Проверка страницы /create/ авторизованным
-    # и не авторизованным пользователем.
     def test_create_guest_url_exists_at_desired_location(self):
         """Страница create перенаправила неавторизованного пользователя."""
         response = self.guest_client.get('/create/')
@@ -101,6 +92,7 @@ class PostURLTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_urls_uses_correct_template(self):
+        """Проверка взаимосвязи url с шаблоном"""
         templates_url_name = {
             '/': INDEX_TEMPLATE,
             f'/group/{GROUP_SLUG}/': GROUP_LIST_TEMPLATE,

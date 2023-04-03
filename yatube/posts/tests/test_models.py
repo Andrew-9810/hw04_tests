@@ -10,7 +10,6 @@ from .constants import (
 )
 from ..models import SYMBOL_LIMIT
 
-
 User = get_user_model()
 
 
@@ -31,7 +30,6 @@ class PostModelTest(TestCase):
 
     def test_models_have_correct_object_names(self):
         """Проверяем, что у моделей корректно работает __str__."""
-        # Не совсем уверен что сделал то что нужно.
         post = self.post
         group = self.group
         expected_object_name = {
