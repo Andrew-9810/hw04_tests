@@ -62,7 +62,7 @@ class PostCreateFormTests(TestCase):
         }
         self.author = self.post.author
         id = self.post.id
-        self.authorized_client.post(reverse('posts:post_edit', args=[id]),
-                                            data=form_data,
-                                            follow=True)
+        self.authorized_client.post(
+            reverse('posts:post_edit', args=[id]), data=form_data, follow=True
+        )
         self.assertNotEqual(self.post.text, 'Новый текст')
