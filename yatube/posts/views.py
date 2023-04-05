@@ -3,7 +3,6 @@ from .models import Post, Group
 from django.contrib.auth import get_user_model
 from .forms import PostForm
 from django.contrib.auth.decorators import login_required
-
 from core.utils import paginator
 
 User = get_user_model()
