@@ -32,14 +32,13 @@ class PostCreateFormTests(TestCase):
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
-        self.GROUP_ID = self.group.pk
 
     def test_create_post(self):
         """Валидная форма создает запись в Post."""
         post_count = Post.objects.count()
         form_data = {
             'text': POST_TEXT,
-            'group': self.GROUP_ID,
+            'group': self.group.pk,
         }
         response = self.authorized_client.post(
             reverse('posts:post_create'),
@@ -51,18 +50,23 @@ class PostCreateFormTests(TestCase):
         self.assertTrue(
             Post.objects.filter(
                 text=POST_TEXT,
-                group=self.GROUP_ID,
+                group=self.group.pk,
             ).exists()
         )
 
     def test_edit_post(self):
         """Валидная форма изменяет запись в базе данных"""
         form_data = {
-            'text': 'Новый текст'
+            'text': POST_TEXT,
+            'group': self.group.pk
         }
-        self.author = self.post.author
-        id = self.post.id
         self.authorized_client.post(
-            reverse('posts:post_edit', args=[id]), data=form_data, follow=True
+            reverse('posts:post_edit', kwargs={'post_id': self.post.id}),
+            data=form_data, follow=True
         )
-        self.assertNotEqual(self.post.text, 'Новый текст')
+        self.assertTrue(
+            Post.objects.filter(
+                text=POST_TEXT,
+                group=self.group.pk,
+            ).exists()
+        )

@@ -42,54 +42,56 @@ class PostURLTests(TestCase):
         self.autor_client.force_login(self.author)
         self.POST_ID = self.post.pk
 
-    def test_group_slug_url_exists_at_desired_location(self):
-        """Страница group_slug доступна любому пользователю."""
-        response = self.guest_client.get(f'/group/{GROUP_SLUG}/')
-        self.assertEqual(response.status_code, 200)
+    def test_url_exists_at_desired_location(self):
+        """Проверка объщедоступных страниц неавторизованным пользователем"""
+        url_name = [
+            '/',
+            f'/group/{GROUP_SLUG}/',
+            f'/profile/{USER_USERNAME}/',
+            f'/posts/{self.POST_ID}/',
+        ]
+        for address in url_name:
+            with self.subTest(address=address):
+                response = self.guest_client.get(address)
+                self.assertEqual(response.status_code, 200)
 
-    def test_profile_url_exists_at_desired_location(self):
-        """Страница profile доступна любому пользователю."""
-        response = self.guest_client.get(f'/profile/{AUTHOR_USERNAME}/')
-        self.assertEqual(response.status_code, 200)
-
-    def test_post_id_url_exists_at_desired_location(self):
-        """Страница post_id доступна любому пользователю."""
-        response = self.guest_client.get(f'/posts/{self.POST_ID}/')
-        self.assertEqual(response.status_code, 200)
-
-    def test_post_id_edit_author_url_exists_at_desired_location(self):
-        """Страница post_id_edit доступна автору."""
-        response = self.autor_client.get(f'/posts/{self.POST_ID}/edit/')
-        self.assertEqual(response.status_code, 200)
-
-    def test_post_id_edit_guest_url_exists_at_desired_location(self):
-        """Страница post_id_edit перенаправила не автора поста."""
-        response = self.authorized_client.get(f'/posts/{self.POST_ID}/edit/')
-        self.assertRedirects(response, f'/profile/{AUTHOR_USERNAME}/')
-
-    def test_post_id_edit_user_url_exists_at_desired_location(self):
-        """Страница post_id_edit перенаправила неавтозован-ого пользователя."""
-        response = self.guest_client.get(f'/posts/{self.POST_ID}/edit/')
-        self.assertRedirects(
-            response, f'/auth/login/?next=/posts/{self.POST_ID}/edit/'
-        )
-
-    def test_create_guest_url_exists_at_desired_location(self):
-        """Страница create перенаправила неавторизованного пользователя."""
-        response = self.guest_client.get('/create/')
-        self.assertRedirects(
-            response, '/auth/login/?next=/create/'
-        )
+    def test_unexisting_url_exists_at_desired_location(self):
+        """Несуществующая объщедоступная страница не найдена статус 404."""
+        response = self.guest_client.get('/unexisting_page/')
+        self.assertEqual(response.status_code, 404)
 
     def test_create_user_url_exists_at_desired_location(self):
         """Страница create доступна авторизованному пользователю."""
         response = self.authorized_client.get('/create/')
         self.assertEqual(response.status_code, 200)
 
-    def test_unexisting_url_exists_at_desired_location(self):
-        """Несуществующая страница не найдена статус 404."""
-        response = self.guest_client.get('/unexisting_page/')
-        self.assertEqual(response.status_code, 404)
+    def test_url_exists_at_desired_location(self):
+        """Проверка страниц доступных только автору"""
+        url_name = [
+            f'/posts/{self.POST_ID}/edit/',
+            '/create/'
+        ]
+        for address in url_name:
+            with self.subTest(address=address):
+                response = self.autor_client.get(address)
+                self.assertEqual(response.status_code, 200)
+
+    def test_url_exists_at_desired_location(self):
+        """Проверка закрытого доступа для неавторизованного пользователя"""
+        url_name_redirect = {
+            f'/posts/{self.POST_ID}/edit/':
+                f'/auth/login/?next=/posts/{self.POST_ID}/edit/',
+            '/create/': '/auth/login/?next=/create/'
+        }
+        for address, redirect in url_name_redirect.items():
+            with self.subTest(address=address):
+                response = self.guest_client.get(address)
+                self.assertRedirects(response, redirect)
+
+    def test_post_id_edit_guest_url_exists_at_desired_location(self):
+        """Страница post_id_edit перенаправила не автора поста."""
+        response = self.authorized_client.get(f'/posts/{self.POST_ID}/edit/')
+        self.assertRedirects(response, f'/profile/{AUTHOR_USERNAME}/')
 
     def test_urls_uses_correct_template(self):
         """Проверка взаимосвязи url с шаблоном"""

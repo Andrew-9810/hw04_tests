@@ -62,7 +62,10 @@ def post_create(request):
     """Страница создания постов"""
     template = 'posts/create_post.html'
     if request.method == 'POST':
-        form = PostForm(request.POST)
+        form = PostForm(
+            request.POST or None,
+            files=request.FILES or None
+        )
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
@@ -79,7 +82,11 @@ def post_edit(request, post_id):
     template = 'posts/create_post.html'
     post = get_object_or_404(Post, pk=post_id)
     if request.method == 'POST':
-        form = PostForm(request.POST, instance=post)
+        form = PostForm(
+            request.POST or None,
+            files=request.FILES or None,
+            instance=post
+        )
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
