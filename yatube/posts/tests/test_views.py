@@ -98,6 +98,7 @@ class PostURLTests(TestCase):
         post_author_0 = first_object.author.username
         post_text_0 = first_object.text
         post_group_0 = first_object.group.title
+        post_image_0 = first_object.group.i
         self.assertEqual(post_author_0, AUTHOR_USERNAME)
         self.assertEqual(post_text_0, POST_TEXT)
         self.assertEqual(post_group_0, GROUP_TITLE)
