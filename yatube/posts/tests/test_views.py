@@ -50,7 +50,6 @@ class PostURLTests(TestCase):
             content=small_gif,
             content_type='image/gif'
         )
-
         cls.author = User.objects.create_user(username=AUTHOR_USERNAME)
         cls.group = Group.objects.create(
             title=GROUP_TITLE,
