@@ -54,6 +54,8 @@ class Comment(models.Model):
     """Мель Comment для хранения комментариев к постам"""
     post = models.ForeignKey(
         Post,
+        #blank=True,
+        #null=True,
         on_delete=models.CASCADE,
         related_name='comments'
     )

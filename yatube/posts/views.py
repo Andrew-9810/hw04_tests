@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Post, Group
+from .models import Post, Group, Comment
 from django.contrib.auth import get_user_model
-from .forms import PostForm
+from .forms import PostForm, CommentForm
 from django.contrib.auth.decorators import login_required
 from core.utils import paginator
 
@@ -47,11 +47,16 @@ def profile(request, username):
 def post_detail(request, post_id):
     """Страница просмотра отдельного поста автора"""
     post = get_object_or_404(Post, id=post_id)
+    #form = CommentForm(request.POST or None)
+    form = CommentForm()
+    comments = Comment.objects.filter(post=post)
     count_post = Post.objects.filter(author_id=post.author_id).count()
     template = 'posts/post_detail.html'
     context = {
         'post': post,
-        'count': count_post
+        'count': count_post,
+        'form': form,
+        'comments': comments
     }
     return render(request, template, context)
 
@@ -96,3 +101,17 @@ def post_edit(request, post_id):
         form = PostForm(instance=post)
         return render(request, template, {'form': form, 'is_edit': True})
     return redirect('posts:profile', username=post.author)
+
+@login_required
+def add_comment(request, post_id):
+    """Странница сохраняет коментарии."""
+    post = get_object_or_404(Post, id=post_id)
+    form = CommentForm(request.POST or None)
+    template = 'posts:post_detail'
+    if form.is_valid():
+        print('Я валидна')
+        comment = form.save(commit=False)
+        comment.author = request.user
+        comment.post = post
+        comment.save()
+    return redirect(template, post_id=post_id)
