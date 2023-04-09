@@ -65,6 +65,11 @@ class PostURLTests(TestCase):
         response = self.authorized_client.get('/create/')
         self.assertEqual(response.status_code, 200)
 
+    def test_comment_user_url_exists_at_desired_location(self):
+        """Страница comment доступна авторизованному пользователю."""
+        response = self.authorized_client.get(f'/posts/{self.POST_ID}/edit/')
+        self.assertEqual(response.status_code, 302)
+
     def test_url_exists_at_desired_location(self):
         """Проверка страниц доступных только автору"""
         url_name = [
@@ -81,7 +86,9 @@ class PostURLTests(TestCase):
         url_name_redirect = {
             f'/posts/{self.POST_ID}/edit/':
                 f'/auth/login/?next=/posts/{self.POST_ID}/edit/',
-            '/create/': '/auth/login/?next=/create/'
+            '/create/': '/auth/login/?next=/create/',
+            f'/posts/{self.POST_ID}/comment/':
+                f'/auth/login/?next=/posts/{self.POST_ID}/comment/',
         }
         for address, redirect in url_name_redirect.items():
             with self.subTest(address=address):

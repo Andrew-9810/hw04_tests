@@ -109,7 +109,6 @@ def add_comment(request, post_id):
     form = CommentForm(request.POST or None)
     template = 'posts:post_detail'
     if form.is_valid():
-        print('Я валидна')
         comment = form.save(commit=False)
         comment.author = request.user
         comment.post = post
