@@ -2,7 +2,8 @@ import shutil
 import tempfile
 
 from django.contrib.auth import get_user_model
-from ..models import Post, Group
+from ..models import Post, Group, Comment
+from ..forms import CommentForm
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
@@ -13,6 +14,8 @@ from .constants import (
     GROUP_SLUG,
     GROUP_DESCRIPTION,
     POST_TEXT,
+    POST_DETAIL_URL_NAME,
+    POST_CREAT_URL_NAME
 )
 
 User = get_user_model()
@@ -36,6 +39,7 @@ class PostCreateFormTests(TestCase):
             group=cls.group,
             image=None
         )
+        cls.comment = Comment()
 
     @classmethod
     def tearDownClass(cls):
@@ -68,7 +72,7 @@ class PostCreateFormTests(TestCase):
             'image': uploaded,
         }
         response = self.authorized_client.post(
-            reverse('posts:post_create'),
+            reverse(POST_CREAT_URL_NAME),
             data=form_data,
             follow=True
         )
@@ -81,6 +85,7 @@ class PostCreateFormTests(TestCase):
                 image='posts/small.gif',
             ).exists()
         )
+
     def test_edit_post(self):
         """Валидная форма изменяет запись в базе данных"""
         form_data = {
@@ -95,5 +100,25 @@ class PostCreateFormTests(TestCase):
             Post.objects.filter(
                 text='Andrew - Andrew',
                 group=self.group.pk,
+            ).exists()
+        )
+
+    def test_post_detail(self):
+        """Валидная форма добавляет комментарий"""
+        comment_count = Comment.objects.count()
+        form_data = {
+            'text': 'Authorized',
+        }
+        responce = self.authorized_client.post(
+             # когда я стучусь по имени я получаю, что страница доступна 200, почему
+             reverse('posts:add_comment', kwargs={'post_id': self.post.id}),
+             data=form_data, follow=True
+        )
+        self.assertEqual(responce.status_code, 200)
+        self.assertEqual(Comment.objects.count(), comment_count + 1)
+        # Хочу сдест вывести более точный запрос, добавить автора, группу и т.п
+        self.assertTrue(
+            Comment.objects.filter(
+                text='Authorized',
             ).exists()
         )

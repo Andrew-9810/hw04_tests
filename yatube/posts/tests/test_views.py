@@ -6,8 +6,9 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django import forms
 from django.conf import settings
-from ..models import Post, Group
+from ..models import Post, Group, Comment
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.cache import cache
 from .constants import (
     INDEX_URL_NAME,
     GROUP_LIST_URL_NAME,
@@ -25,7 +26,8 @@ from .constants import (
     GROUP_SLUG,
     GROUP_DESCRIPTION,
     POST_TEXT,
-    USER_USERNAME
+    USER_USERNAME,
+    COMMENT_TEXT
 )
 
 User = get_user_model()
@@ -37,6 +39,9 @@ class PostURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # Наставник сказал что так лучше не делать, перенеси картинку в setUp!
+
         small_gif = (
              b'\x47\x49\x46\x38\x39\x61\x02\x00'
              b'\x01\x00\x80\x00\x00\x00\x00\x00'
@@ -62,6 +67,12 @@ class PostURLTests(TestCase):
             group=cls.group,
             image=cls.uploaded
         )
+        cls.comments = Comment.objects.create(
+            text=COMMENT_TEXT,
+            author=cls.author,
+            post=cls.post
+
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -76,6 +87,9 @@ class PostURLTests(TestCase):
         self.autor_client = Client()
         self.autor_client.force_login(self.author)
         self.POST_ID = self.post.pk
+
+    def tearDown(self):
+        cache.clear()
 
     def test_pages_post_edit_uses_correct_template(self):
         """URL-адрес post_edit использует соответствующий шаблон."""
@@ -162,18 +176,14 @@ class PostURLTests(TestCase):
                 kwargs={'post_id': self.POST_ID}
             )
         )
-        first_object = response.context['post']
-        post_author_0 = first_object.author.username
-        post_text_0 = first_object.text
-        post_group_0 = first_object.group.title
-        post_image_0 = first_object.image
-        self.assertEqual(post_author_0, AUTHOR_USERNAME)
-        self.assertEqual(post_text_0, POST_TEXT)
-        self.assertEqual(post_group_0, GROUP_TITLE)
-        self.assertEqual(post_image_0, self.post.image)
+        first_object_post = response.context['post']
+        self.assertEqual(first_object_post, self.post)
+        # Нужно понять в чем разница между post и comment
+        first_object_comment = response.context['comments'][0]
+        self.assertEqual(first_object_comment, self.comments)
 
     def test_post_edit_page_show_correct_context(self):
-        """Шаблон create_post сформирован с правильным контекстом."""
+        """Шаблон post_edit сформирован с правильным контекстом."""
         response = self.autor_client.get(
             reverse(
                 f'{POST_EDIT_URL_NAME}',
@@ -215,7 +225,6 @@ class PaginatorViewsTest(TestCase):
             description=GROUP_DESCRIPTION
         )
         cls.SHOW_QUANTITY_SECOND_PAGE: int = 3
-
         cls.post = Post.objects.bulk_create(
             [
                 Post(
@@ -226,6 +235,9 @@ class PaginatorViewsTest(TestCase):
                 )
             ]
         )
+
+    def tearDown(self):
+        cache.clear()
 
     def setUp(self):
         self.guest_client = Client()
@@ -293,3 +305,67 @@ class PaginatorViewsTest(TestCase):
         self.assertEqual(
             len(response.context['page_obj']), self.SHOW_QUANTITY_SECOND_PAGE
         )
+
+
+class CacheTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # Наставник сказал что так лучше не делать, перенеси картинку в setUp!
+
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        cls.uploaded = SimpleUploadedFile(
+            name='small.gif',
+            content=small_gif,
+            content_type='image/gif'
+        )
+        cls.author = User.objects.create_user(username=AUTHOR_USERNAME)
+        cls.group = Group.objects.create(
+            title=GROUP_TITLE,
+            slug=GROUP_SLUG,
+            description=GROUP_DESCRIPTION
+        )
+        cls.post = Post.objects.create(
+            text=POST_TEXT,
+            author=cls.author,
+            group=cls.group,
+            image=cls.uploaded
+        )
+        cls.comments = Comment.objects.create(
+            text=COMMENT_TEXT,
+            author=cls.author,
+            post=cls.post
+        )
+
+    def setUp(self):
+        self.guest_client = Client()
+        self.user = User.objects.create_user(username=USER_USERNAME)
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
+        self.autor_client = Client()
+        self.autor_client.force_login(self.author)
+        self.POST_ID = self.post.pk
+
+    def tearDown(self):
+        cache.clear()
+
+    def test_index_cache_correct_context(self):
+        """Тест кеш главной страницы"""
+        # Запросить данные
+        response = self.authorized_client.get(reverse(INDEX_URL_NAME))
+        first_response = response.content
+        # Удалил запись
+        self.post.delete()
+        # Запросить данные повторно
+        response = self.authorized_client.get(reverse(INDEX_URL_NAME))
+        # Убедился в наличии элемента
+        second_response = response.content
+        self.assertEqual(first_response, second_response)

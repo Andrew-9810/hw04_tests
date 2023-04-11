@@ -12,7 +12,8 @@ from .constants import (
     GROUP_SLUG,
     GROUP_DESCRIPTION,
     POST_TEXT,
-    USER_USERNAME
+    USER_USERNAME,
+    NOT_FOUND_TEMPLATE,
 )
 
 User = get_user_model()
@@ -67,8 +68,11 @@ class PostURLTests(TestCase):
 
     def test_comment_user_url_exists_at_desired_location(self):
         """Страница comment доступна авторизованному пользователю."""
-        response = self.authorized_client.get(f'/posts/{self.POST_ID}/edit/')
+        # Когда я стучусь на адрес я получаю код 302
+        response = self.authorized_client.post(f'/posts/{self.POST_ID}/comment/')
+        redirect = f'/posts/{self.POST_ID}/'
         self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, redirect)
 
     def test_url_exists_at_desired_location(self):
         """Проверка страниц доступных только автору"""
@@ -109,6 +113,7 @@ class PostURLTests(TestCase):
             f'/posts/{self.POST_ID}/': POST_DETAL_TEMPLATE,
             f'/posts/{self.POST_ID}/edit/': CREATE_TEMPLATE,
             '/create/': CREATE_TEMPLATE,
+            '/Error/': NOT_FOUND_TEMPLATE
         }
         for address, template in templates_url_name.items():
             with self.subTest(address=address):

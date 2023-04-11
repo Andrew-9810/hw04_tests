@@ -4,10 +4,12 @@ from django.contrib.auth import get_user_model
 from .forms import PostForm, CommentForm
 from django.contrib.auth.decorators import login_required
 from core.utils import paginator
+from django.views.decorators.cache import cache_page
 
 User = get_user_model()
 
 
+@cache_page(20, key_prefix='index_page')
 def index(request):
     """Главная страница."""
     template = 'posts/index.html'
@@ -47,7 +49,6 @@ def profile(request, username):
 def post_detail(request, post_id):
     """Страница просмотра отдельного поста автора"""
     post = get_object_or_404(Post, id=post_id)
-    #form = CommentForm(request.POST or None)
     form = CommentForm()
     comments = Comment.objects.filter(post=post)
     count_post = Post.objects.filter(author_id=post.author_id).count()
@@ -101,6 +102,7 @@ def post_edit(request, post_id):
         form = PostForm(instance=post)
         return render(request, template, {'form': form, 'is_edit': True})
     return redirect('posts:profile', username=post.author)
+
 
 @login_required
 def add_comment(request, post_id):

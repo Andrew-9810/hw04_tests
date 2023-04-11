@@ -5,7 +5,11 @@ from . import views
 app_name = 'posts'
 urlpatterns = [
     # Главная страница
-    path('', views.index, name='index'),
+    path(
+        '',
+        views.index,
+        name='index'
+    ),
     # Группы, посты
     path(
         'group/<slug:slug>/',

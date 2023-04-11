@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from core.models import CreatedModel
 
 User = get_user_model()
 SYMBOL_LIMIT: int = 15
@@ -54,8 +55,6 @@ class Comment(models.Model):
     """Мель Comment для хранения комментариев к постам"""
     post = models.ForeignKey(
         Post,
-        #blank=True,
-        #null=True,
         on_delete=models.CASCADE,
         related_name='comments'
     )
