@@ -51,6 +51,7 @@ class Post(models.Model):
     class Meta:
         ordering = ['-pub_date', 'id']
 
+
 class Comment(models.Model):
     """Мель Comment для хранения комментариев к постам"""
     post = models.ForeignKey(
@@ -70,4 +71,18 @@ class Comment(models.Model):
     created = models.DateTimeField(
         'Дата публикации',
         auto_now_add=True
+    )
+
+
+class Follow (models.Model):
+    """Модель Follow подписки на автора"""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following'
     )

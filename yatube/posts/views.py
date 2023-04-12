@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Post, Group, Comment
+from .models import Post, Group, Comment, Follow
 from django.contrib.auth import get_user_model
 from .forms import PostForm, CommentForm
 from django.contrib.auth.decorators import login_required
@@ -38,10 +38,24 @@ def profile(request, username):
     posts = author.posts.all()
     count_post = posts.count()
     template = 'posts/profile.html'
+    # Запрашиваю есть ли запись с автором и пользователем
+    following_variable = Follow.objects.filter(
+        # Фильтруем автора = автор профайла
+        author=author
+    ).filter(
+        # Фильтруем пользователя = учетная запись с которой сидим
+        user=request.user
+    )
+    # Ели что-то есть то отписаться, если нечего нет то подписаться
+    if len(following_variable) == 0:
+        following = False
+    else:
+        following = True
     context = {
-        'username': author,
+        'author': author,
         'page_obj': paginator(request, posts),
         'count': count_post,
+        'following': following
     }
     return render(request, template, context)
 
@@ -109,10 +123,45 @@ def add_comment(request, post_id):
     """Странница сохраняет коментарии."""
     post = get_object_or_404(Post, id=post_id)
     form = CommentForm(request.POST or None)
-    template = 'posts:post_detail'
+    url = 'posts:post_detail'
     if form.is_valid():
         comment = form.save(commit=False)
         comment.author = request.user
         comment.post = post
         comment.save()
-    return redirect(template, post_id=post_id)
+    return redirect(url, post_id=post_id)
+
+
+@login_required
+def follow_index(request):
+    template = 'posts/follow.html'
+    user = get_object_or_404(User, username=request.user)
+    posts = user.follower.all()
+    context = {
+        'page_obj': paginator(request, posts)
+    }
+    return render(request, template, context)
+
+
+@login_required
+def profile_follow(request, username):
+    # Подписаться на автора
+    url = 'posts:profile'
+    Follow.objects.create(
+        author=User.objects.get(username=username),
+        user=request.user
+    )
+    return redirect(url, username)
+
+
+@login_required
+def profile_unfollow(request, username):
+    # Дизлайк, отписка
+    url = 'posts:profile'
+    Follow.objects.filter(
+        author=User.objects.get(username=username)
+    ).filter(
+        user=request.user
+    ).delete()
+    return redirect(url, username)
+

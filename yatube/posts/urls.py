@@ -40,9 +40,28 @@ urlpatterns = [
         views.post_edit,
         name='post_edit'
     ),
+    # Комментарии к посту
     path(
         'posts/<int:post_id>/comment/',
         views.add_comment,
         name='add_comment'
+    ),
+    # Странница постов авторов по подписке
+    path(
+        'follow/',
+        views.follow_index,
+        name='follow_index'
+    ),
+    # Подписка на автора
+    path(
+        'profile/<str:username>/follow/',
+        views.profile_follow,
+        name='profile_follow'
+    ),
+    # Отписка от автора
+    path(
+        'profile/<str:username>/unfollow/',
+        views.profile_unfollow,
+        name='profile_unfollow'
     ),
 ]

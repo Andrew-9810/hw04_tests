@@ -2,11 +2,10 @@
 
 {% load thumbnail %}
 {% block title %}
-  Последние обновления на сайте
+  Подписки пользователя
 {% endblock%}
 {% block content %}
-
-<h1>Последние обновления на сайте</h1>
+<h1>Подписки</h1>
 <article>
   {% include 'posts/includes/switcher.html' %}
   {% for var in page_obj %}
@@ -27,6 +26,6 @@
   {% endif %}
   {% if not forloop.last %}<hr>{% endif %}
   {% endfor %}
-  {% include 'posts/includes/paginator.html' %}  
+  {% include 'posts/includes/paginator.html' %}
 </article>
 {% endblock %}
