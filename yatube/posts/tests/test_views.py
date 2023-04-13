@@ -6,7 +6,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django import forms
 from django.conf import settings
-from ..models import Post, Group, Comment
+from ..models import Post, Group, Comment, Follow
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.cache import cache
 from .constants import (
@@ -27,7 +27,9 @@ from .constants import (
     GROUP_DESCRIPTION,
     POST_TEXT,
     USER_USERNAME,
-    COMMENT_TEXT
+    COMMENT_TEXT,
+    PROFILE_FOLLOW_URL_NAME,
+    PROFILE_UNFOLLOW_URL_NAME
 )
 
 User = get_user_model()
@@ -71,8 +73,8 @@ class PostURLTests(TestCase):
             text=COMMENT_TEXT,
             author=cls.author,
             post=cls.post
-
         )
+
 
     @classmethod
     def tearDownClass(cls):
@@ -168,7 +170,7 @@ class PostURLTests(TestCase):
         self.assertEqual(post_author_0, AUTHOR_USERNAME)
         self.assertEqual(post_image_0, self.post.image)
 
-    def test_post_detal_correct_context(self):
+    def test_post_detail_correct_context(self):
         """Шаблон post_detal сформирован с правильным контекстом."""
         response = self.authorized_client.get(
             reverse(
@@ -213,6 +215,39 @@ class PostURLTests(TestCase):
                 form_field = response.context.get('form').fields.get(value)
                 self.assertIsInstance(form_field, expected)
 
+    def test_profile_follow(self):
+        """Тест profile_follow создает запись в базе."""
+        # Запрос на подписку
+        self.follow = Follow
+        response = self.authorized_client.get(
+            reverse(PROFILE_FOLLOW_URL_NAME, kwargs={'username': f'{self.author}'})
+        )
+        self.assertRedirects(response, f'/profile/{AUTHOR_USERNAME}/')
+        self.assertTrue(Follow.objects.filter(
+                author=User.objects.get(username=self.author),
+                user=self.user
+            ).exists()
+        )
+
+    def test_profile_unfollow(self):
+        """Тест profile_follow удаляет запись в базе."""
+        # Запрос на отподписку
+        self.follow = Follow.objects.create(
+            author=User.objects.get(username=self.author),
+            user=self.user
+        )
+        response = self.authorized_client.get(
+            reverse(PROFILE_UNFOLLOW_URL_NAME, kwargs={'username': f'{self.author}'})
+        )
+        self.assertRedirects(response, f'/profile/{AUTHOR_USERNAME}/')
+        self.assertFalse(Follow.objects.filter(
+                author=User.objects.get(username=self.author),
+                user=self.user
+            ).exists()
+        )
+
+
+
 
 class PaginatorViewsTest(TestCase):
     @classmethod
@@ -249,21 +284,21 @@ class PaginatorViewsTest(TestCase):
 
     def test_index_first_page_contains_ten_records(self):
         """Первая страница index, paginator вывод количества записей"""
-        response = self.client.get(reverse(INDEX_URL_NAME))
+        response = self.guest_client.get(reverse(INDEX_URL_NAME))
         self.assertEqual(
             len(response.context['page_obj']), settings.SHOW_QUANTITY
         )
 
     def test_index_second_page_contains_three_records(self):
         """Вторая страница index, paginator вывод количества записей"""
-        response = self.client.get(reverse(INDEX_URL_NAME) + '?page=2')
+        response = self.guest_client.get(reverse(INDEX_URL_NAME) + '?page=2')
         self.assertEqual(
             len(response.context['page_obj']), self.SHOW_QUANTITY_SECOND_PAGE
         )
 
     def test_group_list_first_page_contains_ten_records(self):
         """Первая страница group_list, paginator вывод количества записей"""
-        response = self.client.get(
+        response = self.guest_client.get(
             reverse(f'{GROUP_LIST_URL_NAME}', kwargs={'slug': f'{GROUP_SLUG}'})
         )
         self.assertEqual(
@@ -272,7 +307,7 @@ class PaginatorViewsTest(TestCase):
 
     def test_group_list_second_page_contains_three_records(self):
         """Вторая страница group_list, paginator вывод количества записей"""
-        response = self.client.get(
+        response = self.guest_client.get(
             reverse(
                 f'{GROUP_LIST_URL_NAME}',
                 kwargs={'slug': f'{GROUP_SLUG}'}
@@ -284,7 +319,7 @@ class PaginatorViewsTest(TestCase):
 
     def test_profile_first_page_contains_ten_records(self):
         """Первая страница profile, paginator вывод количества записей"""
-        response = self.client.get(
+        response = self.authorized_client.get(
             reverse(
                 f'{PROFILE_URL_NAME}',
                 kwargs={'username': f'{AUTHOR_USERNAME}'}
@@ -296,7 +331,7 @@ class PaginatorViewsTest(TestCase):
 
     def test_profile_second_page_contains_three_records(self):
         """Вторая страница profile, paginator вывод количества записей"""
-        response = self.client.get(
+        response = self.authorized_client.get(
             reverse(
                 f'{PROFILE_URL_NAME}',
                 kwargs={'username': f'{AUTHOR_USERNAME}'}

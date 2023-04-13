@@ -136,7 +136,7 @@ def add_comment(request, post_id):
 def follow_index(request):
     template = 'posts/follow.html'
     user = get_object_or_404(User, username=request.user)
-    posts = user.follower.all()
+    posts = Post.objects.filter(author__following__user=user)
     context = {
         'page_obj': paginator(request, posts)
     }

@@ -14,6 +14,7 @@ from .constants import (
     POST_TEXT,
     USER_USERNAME,
     NOT_FOUND_TEMPLATE,
+    FOLLOW_TEMPLATE
 )
 
 User = get_user_model()
@@ -74,7 +75,7 @@ class PostURLTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, redirect)
 
-    def test_url_exists_at_desired_location(self):
+    def test_autor_url_exists_at_desired_location(self):
         """Проверка страниц доступных только автору"""
         url_name = [
             f'/posts/{self.POST_ID}/edit/',
@@ -113,7 +114,8 @@ class PostURLTests(TestCase):
             f'/posts/{self.POST_ID}/': POST_DETAL_TEMPLATE,
             f'/posts/{self.POST_ID}/edit/': CREATE_TEMPLATE,
             '/create/': CREATE_TEMPLATE,
-            '/Error/': NOT_FOUND_TEMPLATE
+            '/Error/': NOT_FOUND_TEMPLATE,
+            '/follow/': FOLLOW_TEMPLATE
         }
         for address, template in templates_url_name.items():
             with self.subTest(address=address):
